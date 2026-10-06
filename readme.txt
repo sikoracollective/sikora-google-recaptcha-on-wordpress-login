@@ -4,15 +4,15 @@ Tags: recaptcha, login, security, google recaptcha, spam
 Requires at least: 5.8
 Tested up to: 6.8
 Requires PHP: 7.4
-Stable tag: 1.0.0
+Stable tag: 1.1.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-Adds Google reCAPTCHA v2 ("I'm not a robot") to the WordPress login page to help block automated login attempts.
+Adds Google's reCAPTCHA functionality to the WordPress login page.
 
 == Description ==
 
-This plugin by Sikora Collective protects the WordPress login form (`wp-login.php`) with Google reCAPTCHA v2.
+This plugin adds Google's reCAPTCHA functionality to the WordPress login page.
 
 Features:
 
@@ -20,23 +20,21 @@ Features:
 * Verifies the response with Google before credentials are checked
 * Settings page (**Settings → Sikora Google reCAPTCHA on WordPress Login**) for your ID and Secret Key
 * Leaves login unchanged until both values are configured (avoids accidental lockouts)
-* Removes saved settings when the plugin is deleted
+* On delete, removes everything it stored—including settings—so nothing from the plugin remains
 
-Create values at: https://www.google.com/recaptcha/admin
-
-Choose **reCAPTCHA v2 → "I'm not a robot" Checkbox** and add your site domain.
+The instructions on the following page will help you generate the values you need for this plugin: https://www.google.com/recaptcha/admin
 
 On the settings page under **Google reCAPTCHA v2**:
 
 * Values for the fields below should be created with Google's reCAPTCHA admin console.
-* The reCAPTCHA element will not appear on the WordPress login page if both values are missing.
+* The reCAPTCHA element will not appear on the WordPress login page if any value is missing.
 
 == Installation ==
 
 1. Upload the plugin folder to the `/wp-content/plugins/` directory, or install the zip through **Plugins → Add New**.
 2. Activate the plugin through the **Plugins** menu in WordPress.
 3. Go to **Settings → Sikora Google reCAPTCHA on WordPress Login**.
-4. Enter your Google reCAPTCHA v2 ID and Secret Key.
+4. Enter your Google reCAPTCHA v2 ID and Secret Key. Generate the values using https://www.google.com/recaptcha/admin.
 5. Save changes and open the login page to confirm the widget appears.
 
 == Frequently Asked Questions ==
@@ -53,12 +51,25 @@ Nothing changes on the login page until both the ID and Secret Key are saved.
 
 From Google's reCAPTCHA admin console: https://www.google.com/recaptcha/admin
 
+= What happens when I delete the plugin? =
+
+Everything the plugin stored is removed—including its settings—so nothing from the plugin remains on the site.
+
 == Changelog ==
+
+= 1.1.0 =
+* Hardened reCAPTCHA verification with hostname checks.
+* Stopped autoloading settings that include the secret key.
+* Improved login-page layout and settings UI.
+* Added debug logging for Google request failures and hostname mismatches.
 
 = 1.0.0 =
 * Initial release.
 
 == Upgrade Notice ==
+
+= 1.1.0 =
+Hardening and reliability updates for login verification and settings storage.
 
 = 1.0.0 =
 Initial release.

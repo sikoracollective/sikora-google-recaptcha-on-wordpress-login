@@ -1,20 +1,47 @@
 <?php
 /**
  * Admin settings for Google reCAPTCHA keys.
+ *
+ * Stores the site ID and secret key under the `sgrwl_settings` option and
+ * exposes them on Settings → Sikora Google reCAPTCHA on WordPress Login.
+ *
+ * @package SGRWL
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
-	exit;
+	exit; // prevent direct access
 }
 
+/**
+ * Handles plugin settings registration, sanitization, and admin UI.
+ */
 class SGRWL_Settings {
 
+	/**
+	 * Settings API option group.
+	 *
+	 * @var string
+	 */
 	const OPTION_GROUP = 'sgrwl_settings_group';
-	const OPTION_NAME  = 'sgrwl_settings';
-	const PAGE_SLUG    = 'sgrwl-settings';
 
 	/**
-	 * Register settings hooks.
+	 * Option name storing site_key and secret_key.
+	 *
+	 * @var string
+	 */
+	const OPTION_NAME = 'sgrwl_settings';
+
+	/**
+	 * Settings page slug under Settings.
+	 *
+	 * @var string
+	 */
+	const PAGE_SLUG = 'sgrwl-settings';
+
+	/**
+	 * Hook settings page and option registration into WordPress.
+	 *
+	 * @return void
 	 */
 	public function register() {
 		add_action( 'admin_menu', array( $this, 'add_settings_page' ) );
@@ -25,10 +52,10 @@ class SGRWL_Settings {
 	}
 
 	/**
-	 * Get a single setting value.
+	 * Get a single setting value from the stored option array.
 	 *
-	 * @param string $key     Setting key.
-	 * @param string $default Default value.
+	 * @param string $key     Setting key (`site_key` or `secret_key`).
+	 * @param string $default Default when the key is missing.
 	 * @return string
 	 */
 	public function get( $key, $default = '' ) {
@@ -38,7 +65,7 @@ class SGRWL_Settings {
 	}
 
 	/**
-	 * Whether both keys are configured.
+	 * Whether both the ID and Secret Key are present.
 	 *
 	 * @return bool
 	 */
@@ -47,7 +74,9 @@ class SGRWL_Settings {
 	}
 
 	/**
-	 * Add settings page under Settings.
+	 * Add the plugin settings page under Settings.
+	 *
+	 * @return void
 	 */
 	public function add_settings_page() {
 		add_options_page(
@@ -60,7 +89,9 @@ class SGRWL_Settings {
 	}
 
 	/**
-	 * Register option and fields.
+	 * Register the option, section, and fields with the Settings API.
+	 *
+	 * @return void
 	 */
 	public function register_settings() {
 		register_setting(
@@ -102,10 +133,13 @@ class SGRWL_Settings {
 	}
 
 	/**
-	 * Sanitize saved settings.
+	 * Sanitize and trim submitted settings values.
 	 *
-	 * @param array $input Raw input.
-	 * @return array
+	 * @param array $input Raw settings input.
+	 * @return array{
+	 *     site_key: string,
+	 *     secret_key: string
+	 * }
 	 */
 	public function sanitize_settings( $input ) {
 		$output = array(
@@ -125,7 +159,9 @@ class SGRWL_Settings {
 	}
 
 	/**
-	 * Ensure an existing option row is not autoloaded.
+	 * Convert an existing autoloaded option row to non-autoload if needed.
+	 *
+	 * @return void
 	 */
 	public function maybe_disable_option_autoload() {
 		global $wpdb;
@@ -149,7 +185,9 @@ class SGRWL_Settings {
 	}
 
 	/**
-	 * Store settings without autoload so the secret is not loaded on every request.
+	 * Force the settings option not to autoload.
+	 *
+	 * @return void
 	 */
 	public function disable_option_autoload() {
 		if ( function_exists( 'wp_set_option_autoload' ) ) {
@@ -172,7 +210,9 @@ class SGRWL_Settings {
 	}
 
 	/**
-	 * Section help text.
+	 * Output the Google reCAPTCHA v2 section help bullets.
+	 *
+	 * @return void
 	 */
 	public function render_section_description() {
 		echo '<ul class="sgrwl-settings-bullets">';
@@ -181,14 +221,16 @@ class SGRWL_Settings {
 			'sikora-google-recaptcha-on-wordpress-login'
 		) . '</li>';
 		echo '<li>' . esc_html__(
-			'The reCAPTCHA element will not appear on the WordPress login page if both values are missing.',
+			'The reCAPTCHA element will not appear on the WordPress login page if any value is missing.',
 			'sikora-google-recaptcha-on-wordpress-login'
 		) . '</li>';
 		echo '</ul>';
 	}
 
 	/**
-	 * Site key field.
+	 * Render the ID (site key) input field.
+	 *
+	 * @return void
 	 */
 	public function render_site_key_field() {
 		$value = $this->get( 'site_key' );
@@ -200,7 +242,9 @@ class SGRWL_Settings {
 	}
 
 	/**
-	 * Secret key field.
+	 * Render the Secret Key input field.
+	 *
+	 * @return void
 	 */
 	public function render_secret_key_field() {
 		$value = $this->get( 'secret_key' );
@@ -212,7 +256,9 @@ class SGRWL_Settings {
 	}
 
 	/**
-	 * Render settings page markup.
+	 * Render the full settings page markup.
+	 *
+	 * @return void
 	 */
 	public function render_settings_page() {
 		if ( ! current_user_can( 'manage_options' ) ) {
