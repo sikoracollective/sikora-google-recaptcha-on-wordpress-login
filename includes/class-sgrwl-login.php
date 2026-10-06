@@ -1,18 +1,32 @@
 <?php
 /**
  * Login page reCAPTCHA rendering and verification.
+ *
+ * Shows the Google reCAPTCHA v2 widget on wp-login.php when keys are configured
+ * and blocks authentication unless Google returns a successful response for
+ * this site's hostname.
+ *
+ * @package SGRWL
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
-	exit;
+	exit; // prevent direct access
 }
 
+/**
+ * Integrates Google reCAPTCHA with the WordPress login flow.
+ */
 class SGRWL_Login {
 
+	/**
+	 * Google siteverify endpoint.
+	 *
+	 * @var string
+	 */
 	const VERIFY_URL = 'https://www.google.com/recaptcha/api/siteverify';
 
 	/**
-	 * Settings helper.
+	 * Settings helper used for keys and configuration checks.
 	 *
 	 * @var SGRWL_Settings
 	 */
@@ -26,17 +40,22 @@ class SGRWL_Login {
 	}
 
 	/**
-	 * Register login hooks.
+	 * Register login-page assets, markup, and authentication filter.
+	 *
+	 * @return void
 	 */
 	public function register() {
 		add_action( 'login_enqueue_scripts', array( $this, 'enqueue_styles' ) );
 		add_action( 'login_form', array( $this, 'render_widget' ) );
 		add_action( 'login_footer', array( $this, 'print_recaptcha_script' ), 5 );
-		add_filter( 'authenticate', array( $this, 'verify_recaptcha' ), 15, 3 ); // before credential check
+		// after core credential checks (priority 20) so a wp_error is not overwritten
+		add_filter( 'authenticate', array( $this, 'verify_recaptcha' ), 99, 3 );
 	}
 
 	/**
-	 * Basic layout styles for the login widget.
+	 * Widen the login box and style the reCAPTCHA wrapper when configured.
+	 *
+	 * @return void
 	 */
 	public function enqueue_styles() {
 		if ( ! $this->settings->is_configured() ) {
@@ -54,6 +73,8 @@ class SGRWL_Login {
 
 	/**
 	 * Output the reCAPTCHA widget container on the login form.
+	 *
+	 * @return void
 	 */
 	public function render_widget() {
 		if ( ! $this->settings->is_configured() ) {
@@ -67,9 +88,9 @@ class SGRWL_Login {
 	}
 
 	/**
-	 * Print Google reCAPTCHA after the login form markup.
+	 * Print Google reCAPTCHA api.js with explicit render after the form exists.
 	 *
-	 * Explicit render avoids cases where api.js loads before the widget exists.
+	 * @return void
 	 */
 	public function print_recaptcha_script() {
 		if ( ! $this->settings->is_configured() ) {
@@ -103,11 +124,14 @@ class SGRWL_Login {
 	}
 
 	/**
-	 * Verify reCAPTCHA before allowing authentication.
+	 * Require a successful reCAPTCHA before allowing login.
 	 *
-	 * @param WP_User|WP_Error|null $user     User or error.
-	 * @param string                $username Username.
-	 * @param string                $password Password.
+	 * Runs after core credential authentication so a failed captcha cannot be
+	 * replaced by a successful username/password result.
+	 *
+	 * @param WP_User|WP_Error|null $user     Authenticated user, error, or null.
+	 * @param string                $username Submitted username.
+	 * @param string                $password Submitted password.
 	 * @return WP_User|WP_Error|null
 	 */
 	public function verify_recaptcha( $user, $username, $password ) {
@@ -116,11 +140,6 @@ class SGRWL_Login {
 		}
 
 		if ( ! $this->settings->is_configured() ) {
-			return $user;
-		}
-
-		// Skip when another check already failed.
-		if ( is_wp_error( $user ) ) {
 			return $user;
 		}
 
@@ -192,7 +211,7 @@ class SGRWL_Login {
 	/**
 	 * Whether Google's reported hostname matches this site.
 	 *
-	 * @param string $hostname Hostname from siteverify.
+	 * @param string $hostname Hostname from the siteverify response.
 	 * @return bool
 	 */
 	private function is_hostname_allowed( $hostname ) {
@@ -226,6 +245,7 @@ class SGRWL_Login {
 	 * Log an error when WordPress debug logging is enabled.
 	 *
 	 * @param string $message Error message.
+	 * @return void
 	 */
 	private function log_error( $message ) {
 		if ( ! defined( 'WP_DEBUG_LOG' ) || ! WP_DEBUG_LOG ) {
@@ -237,6 +257,8 @@ class SGRWL_Login {
 
 	/**
 	 * Best-effort client IP for Google verification.
+	 *
+	 * Uses REMOTE_ADDR only; proxy headers are ignored to avoid spoofing.
 	 *
 	 * @return string
 	 */
