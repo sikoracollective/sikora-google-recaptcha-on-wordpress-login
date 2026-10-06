@@ -1,6 +1,6 @@
 # Sikora Google reCAPTCHA on WordPress Login
 
-WordPress plugin by Sikora Collective that adds Google reCAPTCHA v2 ("I'm not a robot") to the login page (`wp-login.php`).
+Adds Google's reCAPTCHA functionality to the WordPress login page.
 
 ## Requirements
 
@@ -13,30 +13,25 @@ WordPress plugin by Sikora Collective that adds Google reCAPTCHA v2 ("I'm not a 
 1. Copy this folder into `wp-content/plugins/`, or install the zip from `./build.sh`.
 2. Activate **Sikora Google reCAPTCHA on WordPress Login** in **Plugins**.
 3. Go to **Settings → Sikora Google reCAPTCHA on WordPress Login**.
-4. Under **Google reCAPTCHA v2**, paste your **ID** and **Secret Key**.
+4. Under **Google reCAPTCHA v2**, paste your **ID** and **Secret Key**. Generate the values using [https://www.google.com/recaptcha/admin](https://www.google.com/recaptcha/admin).
 5. Save changes.
 
-Create values at: [https://www.google.com/recaptcha/admin](https://www.google.com/recaptcha/admin)  
-Choose **reCAPTCHA v2 → "I'm not a robot" Checkbox** and add your site domain.
+The instructions on the following page will help you generate the values you need for this plugin: [https://www.google.com/recaptcha/admin](https://www.google.com/recaptcha/admin)
 
 ## Behavior
 
 - Values for the settings fields should be created with Google's reCAPTCHA admin console.
-- The reCAPTCHA element will not appear on the WordPress login page if both values are missing.
+- The reCAPTCHA element will not appear on the WordPress login page if any value is missing.
 - When both values are saved, the reCAPTCHA widget appears on the login form.
 - Login is blocked until Google verifies a successful reCAPTCHA response.
 
 ## Build
 
-```bash
-./build.sh
-```
-
-Creates `sikora-google-recaptcha-on-wordpress-login.zip` in the project root, lists each included file, prints how many files were added, and removes temporary build files. `README.md` and `build.sh` are not packaged in the zip.
+Run the executable `build.sh` file to create a zip you can install in WordPress.
 
 ## Uninstall
 
-Deleting the plugin removes the saved `sgrwl_settings` option (including on every site in a multisite network).
+When the plugin is deleted, everything it stored is removed—including its settings—so nothing from the plugin remains on the site (including on every site in a multisite network).
 
 ## Project Structure
 
