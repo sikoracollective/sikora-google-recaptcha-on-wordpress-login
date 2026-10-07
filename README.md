@@ -18,14 +18,10 @@ Adds Google reCAPTCHA v2 to the WordPress login page.
 
 ## Behavior
 
-- Values for the settings fields should be created with Google's reCAPTCHA admin console.
+- Values for the settings fields should be created in Google's reCAPTCHA admin console.
 - The reCAPTCHA element will not appear on the WordPress login page if any value is missing.
 - When both values are saved, the reCAPTCHA widget appears on the login form.
 - Login is blocked unless Google returns a successful reCAPTCHA response for an allowed hostname.
-
-## Build
-
-Run `./build.sh` to create an installable WordPress plugin zip file.
 
 ## Project Structure
 
@@ -42,9 +38,13 @@ sikora-login-recaptcha/
 └── README.md
 ```
 
+## Build
+
+Run `./build.sh` to create an installable WordPress plugin zip file.
+
 ## Uninstall
 
-When the plugin is deleted, everything it stored is removed—including its settings—so nothing from the plugin remains on the site (including on every site in a multisite network).
+When you delete the plugin, it removes everything it stored—including its settings—so nothing from the plugin remains on the site (including on every site in a multisite network).
 
 ## Third-party service
 
