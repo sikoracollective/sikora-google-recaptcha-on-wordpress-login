@@ -4,7 +4,7 @@ Tags: recaptcha, login, security, captcha, spam
 Requires at least: 5.8
 Tested up to: 6.8
 Requires PHP: 7.4
-Stable tag: 1.2.0
+Stable tag: 1.3.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -25,25 +25,6 @@ Features:
 * On delete, removes everything it stored—including settings—so nothing from the plugin remains
 
 Create credentials here: https://www.google.com/recaptcha/admin
-
-**Third-party service**
-
-This plugin relies on Google reCAPTCHA (a Google service):
-
-* Terms of Service: https://policies.google.com/terms
-* Google Privacy Policy: https://policies.google.com/privacy
-* reCAPTCHA documentation: https://developers.google.com/recaptcha
-
-When configured, the plugin loads `https://www.google.com/recaptcha/api.js` on the login page and sends verification requests to `https://www.google.com/recaptcha/api/siteverify` from your server.
-
-**Privacy**
-
-* No analytics or telemetry is sent by this plugin to Sikora Collective.
-* When reCAPTCHA is configured and shown, Google may process interaction data according to Google's policies (see links above).
-* During login verification, this plugin may send the reCAPTCHA response token and, when available, the visitor IP address (`REMOTE_ADDR`) to Google's siteverify endpoint, together with your secret key.
-* Keys are stored in the WordPress options table and are not autoloaded.
-
-reCAPTCHA® is a trademark of Google LLC. This plugin is not affiliated with or endorsed by Google.
 
 == Installation ==
 
@@ -69,13 +50,19 @@ From Google's reCAPTCHA admin console: https://www.google.com/recaptcha/admin
 
 = What data is shared with Google? =
 
-When configured, the login page loads Google's reCAPTCHA script. On login, your server verifies the response token with Google and may include the visitor IP address. See Google's Terms and Privacy Policy linked in the Description.
+When configured, the login page loads Google's reCAPTCHA script. On login, your server verifies the response token with Google and may include the visitor IP address. See Google's Terms and Privacy Policy in the Third-party service section.
 
 = What happens when I delete the plugin? =
 
 Everything the plugin stored is removed—including its settings—so nothing from the plugin remains on the site.
 
 == Changelog ==
+
+= 1.3.0 =
+* Improved reCAPTCHA token handling and hostname matching.
+* Added detailed verify-path debug logging and clearer failure messages when debugging.
+* Loads Google api.js through WordPress script APIs.
+* Added license file and WordPress.org guideline documentation (service, privacy, trademarks).
 
 = 1.2.0 =
 * Renamed the plugin to Sikora Login reCAPTCHA.
@@ -91,3 +78,26 @@ Everything the plugin stored is removed—including its settings—so nothing fr
 
 = 1.0.0 =
 * Initial release.
+
+== Third-party service ==
+
+This plugin relies on Google reCAPTCHA (a Google service):
+
+* Terms of Service: https://policies.google.com/terms
+* Google Privacy Policy: https://policies.google.com/privacy
+* reCAPTCHA documentation: https://developers.google.com/recaptcha
+
+When configured, the plugin loads `https://www.google.com/recaptcha/api.js` on the login page and sends verification requests to `https://www.google.com/recaptcha/api/siteverify` from your server.
+
+Privacy:
+
+* No analytics or telemetry is sent by this plugin to Sikora Collective.
+* When reCAPTCHA is configured and shown, Google may process interaction data according to Google's policies (see links above).
+* During login verification, this plugin may send the reCAPTCHA response token and, when available, the visitor IP address (`REMOTE_ADDR`) to Google's siteverify endpoint, together with your secret key.
+* Keys are stored in the WordPress options table and are not autoloaded.
+
+== License and trademarks ==
+
+This plugin is licensed under GPLv2 or later. See license.txt.
+
+reCAPTCHA® is a trademark of Google LLC. This plugin is not affiliated with or endorsed by Google.
