@@ -2,25 +2,11 @@
 
 Adds Google reCAPTCHA v2 to the WordPress login page.
 
-This plugin is licensed under [GPLv2 or later](https://www.gnu.org/licenses/gpl-2.0.html). See `license.txt`.
-
-reCAPTCHA® is a trademark of Google LLC. This plugin is not affiliated with or endorsed by Google.
-
 ## Requirements
 
 - WordPress 5.8+
 - PHP 7.4+
 - Google reCAPTCHA v2 **site key (ID)** and **Secret Key**
-
-## Third-party service
-
-The plugin is an interface to [Google reCAPTCHA](https://developers.google.com/recaptcha):
-
-- [Google Terms of Service](https://policies.google.com/terms)
-- [Google Privacy Policy](https://policies.google.com/privacy)
-- Credential console: [https://www.google.com/recaptcha/admin](https://www.google.com/recaptcha/admin)
-
-When keys are saved, the login page loads `https://www.google.com/recaptcha/api.js`, and the server verifies tokens at `https://www.google.com/recaptcha/api/siteverify` (may include the visitor IP). No data is sent to Sikora Collective.
 
 ## Installation
 
@@ -39,13 +25,7 @@ When keys are saved, the login page loads `https://www.google.com/recaptcha/api.
 
 ## Build
 
-Source PHP in this repository is the deployed source (human-readable; no build step for runtime code).
-
-Run `./build.sh` to create an installable zip for WordPress. The script stages the plugin files listed in `INCLUDE_PATHS` and writes `sikora-login-recaptcha.zip` in the project root.
-
-## Uninstall
-
-When the plugin is deleted, everything it stored is removed—including its settings—so nothing from the plugin remains on the site (including on every site in a multisite network).
+Run `./build.sh` to create an installable WordPress plugin zip file.
 
 ## Project Structure
 
@@ -61,3 +41,23 @@ sikora-login-recaptcha/
 ├── readme.txt                  # WordPress.org plugin readme
 └── README.md
 ```
+
+## Uninstall
+
+When the plugin is deleted, everything it stored is removed—including its settings—so nothing from the plugin remains on the site (including on every site in a multisite network).
+
+## Third-party service
+
+The plugin is an interface to [Google reCAPTCHA](https://developers.google.com/recaptcha):
+
+- [Google Terms of Service](https://policies.google.com/terms)
+- [Google Privacy Policy](https://policies.google.com/privacy)
+- Credential console: [https://www.google.com/recaptcha/admin](https://www.google.com/recaptcha/admin)
+
+When keys are saved, the login page loads `https://www.google.com/recaptcha/api.js`, and the server verifies tokens at `https://www.google.com/recaptcha/api/siteverify` (may include the visitor IP). No data is sent to Sikora Collective.
+
+## License and trademarks
+
+This plugin is licensed under GPLv2 or later. See license.txt.
+
+reCAPTCHA® is a trademark of Google LLC. This plugin is not affiliated with or endorsed by Google.
