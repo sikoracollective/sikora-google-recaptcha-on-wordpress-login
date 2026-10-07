@@ -2,10 +2,10 @@
 /**
  * Admin settings for Google reCAPTCHA keys.
  *
- * Stores the site ID and secret key under the `sgrwl_settings` option and
- * exposes them on Settings → Sikora Google reCAPTCHA on WordPress Login.
+ * Stores the site ID and secret key under the `slr_settings` option and
+ * exposes them on Settings → Sikora Login reCAPTCHA.
  *
- * @package SGRWL
+ * @package SLR
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -15,28 +15,35 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Handles plugin settings registration, sanitization, and admin UI.
  */
-class SGRWL_Settings {
+class SLR_Settings {
 
 	/**
 	 * Settings API option group.
 	 *
 	 * @var string
 	 */
-	const OPTION_GROUP = 'sgrwl_settings_group';
+	const OPTION_GROUP = 'slr_settings_group';
 
 	/**
 	 * Option name storing site_key and secret_key.
 	 *
 	 * @var string
 	 */
-	const OPTION_NAME = 'sgrwl_settings';
+	const OPTION_NAME = 'slr_settings';
+
+	/**
+	 * Legacy option name from the previous plugin slug.
+	 *
+	 * @var string
+	 */
+	const LEGACY_OPTION_NAME = 'sgrwl_settings';
 
 	/**
 	 * Settings page slug under Settings.
 	 *
 	 * @var string
 	 */
-	const PAGE_SLUG = 'sgrwl-settings';
+	const PAGE_SLUG = 'slr-settings';
 
 	/**
 	 * Hook settings page and option registration into WordPress.
@@ -44,11 +51,32 @@ class SGRWL_Settings {
 	 * @return void
 	 */
 	public function register() {
+		$this->maybe_migrate_legacy_option();
+
 		add_action( 'admin_menu', array( $this, 'add_settings_page' ) );
 		add_action( 'admin_init', array( $this, 'register_settings' ) );
 		add_action( 'admin_init', array( $this, 'maybe_disable_option_autoload' ) );
 		add_action( 'add_option_' . self::OPTION_NAME, array( $this, 'disable_option_autoload' ) );
 		add_action( 'update_option_' . self::OPTION_NAME, array( $this, 'disable_option_autoload' ) );
+	}
+
+	/**
+	 * Copy settings from the previous option name when upgrading.
+	 *
+	 * @return void
+	 */
+	private function maybe_migrate_legacy_option() {
+		if ( false !== get_option( self::OPTION_NAME, false ) ) {
+			return;
+		}
+
+		$legacy = get_option( self::LEGACY_OPTION_NAME, false );
+		if ( false === $legacy || ! is_array( $legacy ) ) {
+			return;
+		}
+
+		add_option( self::OPTION_NAME, $legacy, '', false );
+		delete_option( self::LEGACY_OPTION_NAME );
 	}
 
 	/**
@@ -80,8 +108,8 @@ class SGRWL_Settings {
 	 */
 	public function add_settings_page() {
 		add_options_page(
-			__( 'Sikora Google reCAPTCHA on WordPress Login', 'sikora-google-recaptcha-on-wordpress-login' ),
-			__( 'Sikora Google reCAPTCHA on WordPress Login', 'sikora-google-recaptcha-on-wordpress-login' ),
+			__( 'Sikora Login reCAPTCHA', 'sikora-login-recaptcha' ),
+			__( 'Sikora Login reCAPTCHA', 'sikora-login-recaptcha' ),
 			'manage_options',
 			self::PAGE_SLUG,
 			array( $this, 'render_settings_page' )
@@ -109,26 +137,26 @@ class SGRWL_Settings {
 		);
 
 		add_settings_section(
-			'sgrwl_main_section',
-			__( 'Google reCAPTCHA v2', 'sikora-google-recaptcha-on-wordpress-login' ),
+			'slr_main_section',
+			__( 'Google reCAPTCHA v2', 'sikora-login-recaptcha' ),
 			array( $this, 'render_section_description' ),
 			self::PAGE_SLUG
 		);
 
 		add_settings_field(
-			'sgrwl_site_key',
-			__( 'ID', 'sikora-google-recaptcha-on-wordpress-login' ),
+			'slr_site_key',
+			__( 'ID', 'sikora-login-recaptcha' ),
 			array( $this, 'render_site_key_field' ),
 			self::PAGE_SLUG,
-			'sgrwl_main_section'
+			'slr_main_section'
 		);
 
 		add_settings_field(
-			'sgrwl_secret_key',
-			__( 'Secret Key', 'sikora-google-recaptcha-on-wordpress-login' ),
+			'slr_secret_key',
+			__( 'Secret Key', 'sikora-login-recaptcha' ),
 			array( $this, 'render_secret_key_field' ),
 			self::PAGE_SLUG,
-			'sgrwl_main_section'
+			'slr_main_section'
 		);
 	}
 
@@ -147,12 +175,10 @@ class SGRWL_Settings {
 			'secret_key' => '',
 		);
 
-		if ( isset( $input['site_key'] ) ) {
-			$output['site_key'] = trim( sanitize_text_field( $input['site_key'] ) );
-		}
-
-		if ( isset( $input['secret_key'] ) ) {
-			$output['secret_key'] = trim( sanitize_text_field( $input['secret_key'] ) );
+		foreach ( array_keys( $output ) as $key ) {
+			if ( isset( $input[ $key ] ) ) {
+				$output[ $key ] = trim( sanitize_text_field( $input[ $key ] ) );
+			}
 		}
 
 		return $output;
@@ -215,14 +241,14 @@ class SGRWL_Settings {
 	 * @return void
 	 */
 	public function render_section_description() {
-		echo '<ul class="sgrwl-settings-bullets">';
+		echo '<ul class="slr-settings-bullets">';
 		echo '<li>' . esc_html__(
 			'Values for the fields below should be created with Google\'s reCAPTCHA admin console.',
-			'sikora-google-recaptcha-on-wordpress-login'
+			'sikora-login-recaptcha'
 		) . '</li>';
 		echo '<li>' . esc_html__(
 			'The reCAPTCHA element will not appear on the WordPress login page if any value is missing.',
-			'sikora-google-recaptcha-on-wordpress-login'
+			'sikora-login-recaptcha'
 		) . '</li>';
 		echo '</ul>';
 	}
@@ -233,12 +259,7 @@ class SGRWL_Settings {
 	 * @return void
 	 */
 	public function render_site_key_field() {
-		$value = $this->get( 'site_key' );
-		printf(
-			'<input type="text" class="regular-text" name="%1$s[site_key]" value="%2$s" autocomplete="off" />',
-			esc_attr( self::OPTION_NAME ),
-			esc_attr( $value )
-		);
+		$this->render_settings_field( 'site_key', 'text' );
 	}
 
 	/**
@@ -247,11 +268,23 @@ class SGRWL_Settings {
 	 * @return void
 	 */
 	public function render_secret_key_field() {
-		$value = $this->get( 'secret_key' );
+		$this->render_settings_field( 'secret_key', 'password' );
+	}
+
+	/**
+	 * Render a settings text input for the given option key.
+	 *
+	 * @param string $key  Setting key (`site_key` or `secret_key`).
+	 * @param string $type Input type (`text` or `password`).
+	 * @return void
+	 */
+	private function render_settings_field( $key, $type ) {
 		printf(
-			'<input type="password" class="regular-text" name="%1$s[secret_key]" value="%2$s" autocomplete="off" />',
+			'<input type="%1$s" class="regular-text" name="%2$s[%3$s]" value="%4$s" autocomplete="off" />',
+			esc_attr( $type ),
 			esc_attr( self::OPTION_NAME ),
-			esc_attr( $value )
+			esc_attr( $key ),
+			esc_attr( $this->get( $key ) )
 		);
 	}
 
@@ -267,23 +300,23 @@ class SGRWL_Settings {
 		?>
 		<div class="wrap">
 			<style>
-				.sgrwl-settings-section > ul.sgrwl-settings-bullets {
+				.slr-settings-section > ul.slr-settings-bullets {
 					list-style: disc;
 					margin: 0.5em 0 1em 1.5em;
 					padding-left: 1.5em;
 				}
-				.sgrwl-settings-section > .form-table {
+				.slr-settings-section > .form-table {
 					margin-left: 1.5em;
 					width: auto;
 				}
-				.sgrwl-settings-section > .form-table th {
+				.slr-settings-section > .form-table th {
 					width: 1%;
 					padding: 10px 8px 6px 0;
 					vertical-align: top;
 					white-space: nowrap;
 					line-height: 2;
 				}
-				.sgrwl-settings-section > .form-table td {
+				.slr-settings-section > .form-table td {
 					padding: 6px 0;
 					vertical-align: top;
 				}
@@ -291,7 +324,7 @@ class SGRWL_Settings {
 			<h1 style="font-weight: 700;"><?php echo esc_html( get_admin_page_title() ); ?></h1>
 			<form action="options.php" method="post">
 				<?php settings_fields( self::OPTION_GROUP ); ?>
-				<div class="sgrwl-settings-section">
+				<div class="slr-settings-section">
 					<?php do_settings_sections( self::PAGE_SLUG ); ?>
 				</div>
 				<?php submit_button(); ?>
