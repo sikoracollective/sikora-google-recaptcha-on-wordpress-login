@@ -80,7 +80,7 @@ class SLR_Login {
 			'https://www.google.com/recaptcha/api.js'
 		);
 
-		wp_register_script( 'slr-google-recaptcha', $api_url, array(), null, true );
+		wp_register_script( 'slr-google-recaptcha', $api_url, array(), SLR_VERSION, true );
 		wp_enqueue_script( 'slr-google-recaptcha' );
 
 		$inline = 'function slrRecaptchaOnload(){'
@@ -124,6 +124,8 @@ class SLR_Login {
 		if ( ! $this->settings->is_configured() ) {
 			return;
 		}
+
+		wp_nonce_field( 'slr_login_recaptcha', 'slr_login_nonce' );
 		?>
 		<div class="slr-recaptcha-wrapper">
 			<div id="slr-recaptcha" class="g-recaptcha" data-sitekey="<?php echo esc_attr( $this->settings->get( 'site_key' ) ); ?>"></div>
@@ -150,6 +152,15 @@ class SLR_Login {
 		if ( ! $this->settings->is_configured() ) {
 			$this->log_error( 'Verify skipped: plugin is not configured with both keys.' );
 			return $user;
+		}
+
+		if ( ! $this->verify_login_nonce() ) {
+			$this->log_error( 'Verify failed: missing or invalid login nonce.' );
+
+			return new WP_Error(
+				'slr_invalid_login_nonce',
+				__( '<strong>Error:</strong> Login security check failed. Please try again.', 'sikora-login-recaptcha' )
+			);
 		}
 
 		$token = $this->get_recaptcha_token();
@@ -288,19 +299,43 @@ class SLR_Login {
 	}
 
 	/**
+	 * Verify the login form nonce before reading POST data.
+	 *
+	 * @return bool
+	 */
+	private function verify_login_nonce() {
+		return isset( $_POST['slr_login_nonce'] )
+			&& wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['slr_login_nonce'] ) ), 'slr_login_recaptcha' );
+	}
+
+	/**
 	 * Read the submitted reCAPTCHA response token.
 	 *
 	 * Avoids sanitize_text_field(), which strips percent-encoded sequences and
-	 * can corrupt valid Google tokens.
+	 * can corrupt valid Google tokens. Requires a valid login nonce first.
 	 *
 	 * @return string
 	 */
 	private function get_recaptcha_token() {
-		if ( ! isset( $_POST['g-recaptcha-response'] ) || ! is_string( $_POST['g-recaptcha-response'] ) ) {
+		if (
+			! isset( $_POST['slr_login_nonce'] )
+			|| ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['slr_login_nonce'] ) ), 'slr_login_recaptcha' )
+		) {
 			return '';
 		}
 
-		$token = trim( wp_unslash( $_POST['g-recaptcha-response'] ) );
+		if ( ! isset( $_POST['g-recaptcha-response'] ) ) {
+			return '';
+		}
+
+		// Opaque Google token: do not use sanitize_text_field() — it strips %XX and can invalidate responses.
+		// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- verified via Google siteverify API
+		$raw = wp_unslash( $_POST['g-recaptcha-response'] );
+		if ( ! is_string( $raw ) ) {
+			return '';
+		}
+
+		$token = trim( $raw );
 
 		// reject clearly invalid payloads; google performs full validation
 		if ( '' === $token || false !== strpos( $token, "\0" ) ) {
@@ -361,8 +396,8 @@ class SLR_Login {
 			}
 		}
 
-		if ( ! empty( $_SERVER['HTTP_HOST'] ) && is_string( $_SERVER['HTTP_HOST'] ) ) {
-			$host = strtolower( trim( wp_unslash( $_SERVER['HTTP_HOST'] ) ) );
+		if ( ! empty( $_SERVER['HTTP_HOST'] ) ) {
+			$host = strtolower( sanitize_text_field( wp_unslash( $_SERVER['HTTP_HOST'] ) ) );
 			$host = preg_replace( '/:\d+$/', '', $host ); // strip port
 			if ( is_string( $host ) && '' !== $host ) {
 				$allowed[] = $host;
@@ -397,6 +432,7 @@ class SLR_Login {
 			return;
 		}
 
+		// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- gated by WP_DEBUG_LOG for site owners debugging verify failures
 		error_log( 'Sikora Login reCAPTCHA: ' . $message );
 	}
 

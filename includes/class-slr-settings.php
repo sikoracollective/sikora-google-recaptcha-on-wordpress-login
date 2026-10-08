@@ -58,6 +58,28 @@ class SLR_Settings {
 		add_action( 'admin_init', array( $this, 'maybe_disable_option_autoload' ) );
 		add_action( 'add_option_' . self::OPTION_NAME, array( $this, 'disable_option_autoload' ) );
 		add_action( 'update_option_' . self::OPTION_NAME, array( $this, 'disable_option_autoload' ) );
+		add_filter( 'plugin_action_links_' . plugin_basename( SLR_PLUGIN_FILE ), array( $this, 'add_plugin_action_links' ) );
+	}
+
+	/**
+	 * Add a Settings link on the Plugins screen.
+	 *
+	 * @param string[] $links Existing action links.
+	 * @return string[]
+	 */
+	public function add_plugin_action_links( $links ) {
+		$url = admin_url( 'options-general.php?page=' . self::PAGE_SLUG );
+
+		array_unshift(
+			$links,
+			sprintf(
+				'<a href="%s">%s</a>',
+				esc_url( $url ),
+				esc_html__( 'Settings', 'sikora-login-recaptcha' )
+			)
+		);
+
+		return $links;
 	}
 
 	/**
@@ -190,21 +212,13 @@ class SLR_Settings {
 	 * @return void
 	 */
 	public function maybe_disable_option_autoload() {
-		global $wpdb;
-
-		$autoload = $wpdb->get_var(
-			$wpdb->prepare(
-				"SELECT autoload FROM {$wpdb->options} WHERE option_name = %s LIMIT 1",
-				self::OPTION_NAME
-			)
-		);
-
-		if ( null === $autoload ) {
+		if ( false === get_option( self::OPTION_NAME, false ) ) {
 			return;
 		}
 
-		if ( in_array( (string) $autoload, array( 'no', 'off', 'auto-off' ), true ) ) {
-			return;
+		$alloptions = wp_load_alloptions();
+		if ( ! isset( $alloptions[ self::OPTION_NAME ] ) ) {
+			return; // already excluded from autoload
 		}
 
 		$this->disable_option_autoload();
@@ -221,18 +235,14 @@ class SLR_Settings {
 			return;
 		}
 
-		global $wpdb;
+		// WP < 6.4: recreate the option with autoload disabled via Settings API helpers
+		$value = get_option( self::OPTION_NAME, null );
+		if ( null === $value ) {
+			return;
+		}
 
-		$wpdb->update(
-			$wpdb->options,
-			array( 'autoload' => 'no' ),
-			array( 'option_name' => self::OPTION_NAME ),
-			array( '%s' ),
-			array( '%s' )
-		);
-
-		wp_cache_delete( self::OPTION_NAME, 'options' );
-		wp_cache_delete( 'alloptions', 'options' );
+		delete_option( self::OPTION_NAME );
+		add_option( self::OPTION_NAME, $value, '', 'no' );
 	}
 
 	/**
